@@ -1,0 +1,54 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Font Awesome
+@import '~@fortawesome/fontawesome-free/scss/fontawesome';
+@import '~@fortawesome/fontawesome-free/scss/regular';
+@import '~@fortawesome/fontawesome-free/scss/solid';
+@import '~@fortawesome/fontawesome-free/scss/brands';
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+
+.brand-logo {
+    background-image: url('../images/logo.svg');
+    background-repeat: no-repeat;
+    width:114px;
+    height:60px;
+}
+
+.brand-rsa {
+    background-image: url('../images/rsa-logo.png');
+    background-size: 100px 100px;
+    background-repeat: no-repeat;
+    height: 100px;
+    width: 100px;
+    margin-top:30px;
+}
+
+.btn-rsa {
+    color: #ff0000;
+    background-color: #000;
+    border-color: #000;
+}
+
+.btn-rsa:hover {
+    color: #fff;
+}
+
+.btn-rsa:focus, .btn-rsa.focus {
+    box-shadow: 0 0 0 0.2rem rgba(222, 170, 12, 0.5);
+}
+
+.btn-rsa.disabled, .btn-rsa:disabled {
+    color: #000;
+    background-color: #7f7f7f;
+    border-color: #7f7f7f;
+}
+
+.hide {
+    display:none;
+}

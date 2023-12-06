@@ -1,0 +1,96 @@
+######################################################
+# Config variables:
+# HOSTNAME              SSH Host
+# K8S_SECRET_USERNAME   SSH Username
+# K8S_SECRET_KEY        SSH Key
+# DIRECTORY             Release directory
+# SHARE_DIRECTORY       Directory
+# LINK_DIRECTORY        Release directory that will be linked to the release
+######################################################
+
+# Initial image
+image: registry.git.reussprivate.com/docker/laraext:4b29176556f7f2c62e311f252e6ad1c77d9395d5
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+    - server/vendor/
+    - server/node_modules/
+
+# Stages
+# https://docs.gitlab.com/ce/ci/yaml/README.html#stages
+stages:
+  - install
+  - build
+  - test
+  - deploy
+
+# Variables
+variables:
+  DB_HOST: mysql
+  DB_CONNECTION: mysql
+  DB_DATABASE: rpcrm_test
+  MYSQL_DATABASE: rpcrm_test
+  MYSQL_USER: rpcrm
+  MYSQL_PASSWORD: secret
+  MYSQL_ROOT_PASSWORD: secretroot
+
+######################################################
+# Jobs - Build steps
+######################################################
+install:
+  stage: install
+  script:
+    - cd server
+    - npm install
+    - composer update --no-dev
+
+# Build server
+build:server:
+  stage: build
+  dependencies:
+    - install
+  script:
+    - cd server
+    - npm run production
+  artifacts:
+    paths:
+      - server/public
+      - server/vendor
+      - server/bootstrap
+
+# Build client
+build:client:
+  stage: build
+  dependencies:
+    - install
+  before_script:
+    - export _JAVA_OPTIONS="-Xmx8g"
+  script:
+    - cd client
+    - sencha app build --production
+  artifacts:
+    paths:
+      - client/build/production
+
+# Run tests
+test:
+  stage: test
+  dependencies:
+    - build:server
+    - build:client
+  services:
+    - name: mariadb:latest
+      alias: mysql
+    - redis:latest
+  before_script:
+    - echo "SELECT 'DATABASE_READY';" | mysql --user=root --password="$MYSQL_ROOT_PASSWORD" --host=mysql "$MYSQL_DATABASE"
+    - cd server
+    - cp .env.example .env                              # Copy config
+    - composer update --dev                             # Add dev dependencies for testing environment
+    - php artisan key:generate                          # Generate
+  script:
+    - php artisan migrate --force
+    - php artisan db:seed --class=TestDatabaseSeeder    # Testing seeds
+    - vendor/bin/phpunit
